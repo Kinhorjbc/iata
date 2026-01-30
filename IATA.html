@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Jogo IATA</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  color: #000;
+}
+
+/* ===== VIDEO DE FUNDO ===== */
+.video-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.video-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.85);
+  z-index: -1;
+}
+
+/* ===== CONTEÚDO ===== */
+.overlay {
+  max-width: 700px;
+  margin: 40px auto;
+  background: rgba(255,255,255,0.95);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+}
+
+/* ===== ESTUDOS ===== */
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.tabela th,
+.tabela td {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+.tabela th {
+  background: #f0f0f0;
+}
+
+button {
+  margin-top: 20px;
+  padding: 12px 25px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ===== JOGO ===== */
+img {
+  width: 220px;
+  height: 120px;
+  object-fit: contain;
+  margin-bottom: 15px;
+}
+
+input {
+  padding: 10px;
+  width: 80%;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+#resultado {
+  margin-top: 15px;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<!-- VIDEO DE FUNDO -->
+<video class="video-bg" autoplay muted loop playsinline poster="fundo.jpg">
+  <source src="fundo.mp4" type="video/mp4">
+</video>
+<div class="video-overlay"></div>
+
+<!-- ===== TELA DE ESTUDOS ===== -->
+<div class="overlay" id="telaEstudos">
+  <h2>📘 Estudo – Códigos IATA</h2>
+
+  <table class="tabela">
+    <tr>
+      <th>Companhia</th>
+      <th>IATA</th>
+    </tr>
+  </table>
+
+  <button onclick="iniciarJogo()">▶️ Começar</button>
+</div>
+
+<!-- ===== TELA DO JOGO ===== -->
+<div class="overlay" id="telaJogo" style="display:none">
+  <h2>✈️ Códigos IATA</h2>
+
+  <img id="logo">
+  <h3 id="nome"></h3>
+
+  <input id="resposta" placeholder="Digite o código IATA" autofocus>
+
+  <p id="resultado"></p>
+  <p>Pontos: <span id="pontos">0</span></p>
+  <p id="contador"></p>
+</div>
+
+<script>
+/* ===== ELEMENTOS ===== */
+const telaEstudos = document.getElementById("telaEstudos");
+const telaJogo = document.getElementById("telaJogo");
+const tabela = document.querySelector(".tabela");
+
+const logo = document.getElementById("logo");
+const nome = document.getElementById("nome");
+const resposta = document.getElementById("resposta");
+const resultado = document.getElementById("resultado");
+const contador = document.getElementById("contador");
+const pontosSpan = document.getElementById("pontos");
+
+/* ===== DADOS ===== */
+const companhias = [
+ {n:"American Airlines", i:"AA"},
+ {n:"Delta Air Lines", i:"DL"},
+ {n:"United Airlines", i:"UA"},
+ {n:"Air France", i:"AF"},
+ {n:"Lufthansa", i:"LH"},
+ {n:"British Airways", i:"BA"},
+ {n:"KLM", i:"KL"},
+ {n:"TAP Air Portugal", i:"TP"},
+ {n:"LATAM Airlines", i:"LA"},
+ {n:"GOL", i:"G3"},
+ {n:"Azul", i:"AD"},
+ {n:"Avianca", i:"AV"},
+ {n:"Aeromexico", i:"AM"},
+ {n:"Air Canada", i:"AC"},
+ {n:"Qatar Airways", i:"QR"},
+ {n:"Emirates", i:"EK"},
+ {n:"Etihad Airways", i:"EY"},
+ {n:"Singapore Airlines", i:"SQ"},
+ {n:"Cathay Pacific", i:"CX"},
+ {n:"Japan Airlines", i:"JL"},
+ {n:"ANA", i:"NH"},
+ {n:"Korean Air", i:"KE"},
+ {n:"Turkish Airlines", i:"TK"},
+ {n:"Swiss", i:"LX"},
+ {n:"Finnair", i:"AY"},
+ {n:"Iberia", i:"IB"},
+ {n:"Qantas", i:"QF"},
+ {n:"Air India", i:"AI"},
+ {n:"Malaysia Airlines", i:"MH"},
+ {n:"Thai Airways", i:"TG"},
+ {n:"Vietnam Airlines", i:"VN"},
+ {n:"Air New Zealand", i:"NZ"},
+ {n:"Ryanair", i:"FR"},
+ {n:"EasyJet", i:"U2"},
+ {n:"JetBlue", i:"B6"},
+ {n:"Alaska Airlines", i:"AS"}
+];
+
+let idx = 0;
+let pontos = 0;
+
+/* ===== MONTA TABELA DE ESTUDOS ===== */
+companhias.forEach(c => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${c.n}</td><td><strong>${c.i}</strong></td>`;
+  tabela.appendChild(tr);
+});
+
+/* ===== INICIAR JOGO ===== */
+function iniciarJogo() {
+  telaEstudos.style.display = "none";
+  telaJogo.style.display = "block";
+  carregar();
+  resposta.focus();
+}
+
+/* ===== JOGO ===== */
+function carregar() {
+  if (idx >= companhias.length) {
+    let mensagem = "";
+    let imagem = "";
+
+    if (pontos >= 36) {
+      mensagem = "🏆 Parabéns! Excelente desempenho!";
+      imagem = "final-ouro.png";
+    } else if (pontos >= 20) {
+      mensagem = "👏 Muito bem! Você foi bem!";
+      imagem = "final-prata.png";
+    } else if (pontos >= 10) {
+      mensagem = "💪 Continue praticando!";
+      imagem = "final-bronze.png";
+    } else {
+      mensagem = "😅 Tente novamente!";
+      imagem = "final-bronze.png";
+    }
+
+    document.body.innerHTML = `
+      <div style="text-align:center; padding:40px">
+        <h1>${mensagem}</h1>
+        <img src="${imagem}" style="width:300px; margin:20px 0">
+        <h2>${pontos} de ${companhias.length} acertos</h2>
+        <button onclick="location.reload()">🔁 Jogar novamente</button>
+      </div>
+    `;
+    return;
+  }
+
+  const codigo = companhias[idx].i;
+
+  logo.src = `logos/${codigo}.svg`;
+  logo.onerror = () => {
+    logo.onerror = null;
+    logo.src = `logos/${codigo}.png`;
+    logo.onerror = () => logo.src = "logos/padrao.png";
+  };
+
+  nome.innerText = companhias[idx].n;
+  contador.innerText = `Companhia ${idx + 1} de ${companhias.length}`;
+  resposta.value = "";
+  resultado.innerText = "";
+}
+
+resposta.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    if (resposta.value.toUpperCase() === companhias[idx].i) {
+      resultado.innerText = "✅ Correto!";
+      pontos++;
+    } else {
+      resultado.innerText = "❌ Correto: " + companhias[idx].i;
+    }
+    pontosSpan.innerText = pontos;
+    idx++;
+    setTimeout(carregar, 900);
+  }
+});
+</script>
+
+</body>
+</html>
